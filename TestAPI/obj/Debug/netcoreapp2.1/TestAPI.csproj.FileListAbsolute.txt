@@ -1,0 +1,14 @@
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\bin\Debug\netcoreapp2.1\Properties\launchSettings.json
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\bin\Debug\netcoreapp2.1\TestAPI.deps.json
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\bin\Debug\netcoreapp2.1\TestAPI.runtimeconfig.json
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\bin\Debug\netcoreapp2.1\TestAPI.runtimeconfig.dev.json
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\bin\Debug\netcoreapp2.1\TestAPI.dll
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\obj\Debug\netcoreapp2.1\TestAPI.csprojAssemblyReference.cache
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\obj\Debug\netcoreapp2.1\TestAPI.RazorAssemblyInfo.cache
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\obj\Debug\netcoreapp2.1\TestAPI.RazorAssemblyInfo.cs
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\obj\Debug\netcoreapp2.1\TestAPI.AssemblyInfoInputs.cache
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\obj\Debug\netcoreapp2.1\TestAPI.AssemblyInfo.cs
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\obj\Debug\netcoreapp2.1\TestAPI.RazorTargetAssemblyInfo.cache
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\bin\Debug\netcoreapp2.1\TestAPI.pdb
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\obj\Debug\netcoreapp2.1\TestAPI.dll
+C:\Users\Anatolii\source\repos\TestAPI\TestAPI\obj\Debug\netcoreapp2.1\TestAPI.pdb
