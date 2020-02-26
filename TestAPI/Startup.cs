@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using TestAPI.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TestAPI
@@ -16,7 +17,8 @@ namespace TestAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_1);
-            services.AddSingleton<Services.IUserServices, Services.UserService>();
+            services.AddSingleton<IUserServices, UserService>();
+            services.AddSingleton<IEmployeeServices, EmployeeService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

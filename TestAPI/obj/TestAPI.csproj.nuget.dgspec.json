@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Anatolii\\source\\repos\\TestAPI\\TestAPI\\TestAPI.csproj": {}
+    "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Anatolii\\source\\repos\\TestAPI\\TestAPI\\TestAPI.csproj": {
+    "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Anatolii\\source\\repos\\TestAPI\\TestAPI\\TestAPI.csproj",
+        "projectUniqueName": "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj",
         "projectName": "TestAPI",
-        "projectPath": "C:\\Users\\Anatolii\\source\\repos\\TestAPI\\TestAPI\\TestAPI.csproj",
+        "projectPath": "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj",
         "packagesPath": "C:\\Users\\Anatolii\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Anatolii\\source\\repos\\TestAPI\\TestAPI\\obj\\",
+        "outputPath": "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Anatolii\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -22,6 +22,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Users\\Anatolii\\source\\repos\\TestAPI\\TestAPI": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -60,6 +61,10 @@
             "Microsoft.AspNetCore.StaticFiles": {
               "target": "Package",
               "version": "[2.1.1, )"
+            },
+            "Microsoft.Data.Sqlite": {
+              "target": "Package",
+              "version": "[3.1.2, )"
             },
             "Microsoft.EntityFrameworkCore.Design": {
               "target": "Package",

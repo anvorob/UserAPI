@@ -8,7 +8,7 @@ namespace TestAPI.Models
 {
     public class User
     {
-        public int OID {get;set;}
+        public string OID {get;set;}
         public string Title { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }

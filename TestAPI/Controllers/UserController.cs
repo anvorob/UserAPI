@@ -9,7 +9,7 @@ using TestAPI.Services;
 
 namespace TestAPI.Controllers
 {
-    [Route("v1/")]
+    [Route("v1/[controller]/")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -42,7 +42,7 @@ namespace TestAPI.Controllers
         }
 
         [HttpGet]
-        [Route("GetUserItems")]
+        //[Route("GetUserItems")]
         public ActionResult<ReturnObject> GetUsers(int limit=5, int page=0)
         {
             return _service.GetUsers(limit, page);
@@ -58,8 +58,8 @@ namespace TestAPI.Controllers
                 return NotFound(new ReturnMessage( "Record doesnt exist" ));
         }
 
-        [HttpPost]
-        [Route("UpdateUser")]
+        [HttpPut]
+        //[Route("UpdateUser")]
         public ActionResult<User> UpdateUser(User user)
         {
             return _service.UpdateUser(user);
