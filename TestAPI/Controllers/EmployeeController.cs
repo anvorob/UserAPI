@@ -46,7 +46,7 @@ namespace TestAPI.Controllers
         }
 
         [HttpPut]
-        public ActionResult<Employee> UpdateEmployee(Employee empl)
+        public ActionResult<Employee> UpdateEmployee(ProductionWorker empl)
         {
             Employee returnedObj = _service.UpdateEmployee(empl);
             if (returnedObj != null)
@@ -56,9 +56,11 @@ namespace TestAPI.Controllers
         }
 
         [HttpDelete]
-        public ActionResult DeleteEmployee(string OID)
+        public ActionResult DeleteEmployee(string guid)
         {
-            bool result=_service.DeleteEmployee(OID);
+            if (string.IsNullOrEmpty(guid))
+                return BadRequest();
+            bool result=_service.DeleteEmployee(guid);
             if (result)
                 return Ok();
             else

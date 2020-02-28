@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 using TestAPI.Models;
 using Microsoft.Data.Sqlite;
 using System.Data;
-//using System.Data.SQLite;
-//using System.Data.SqlClient;
+
 
 namespace TestAPI.Services
 {
@@ -41,34 +40,20 @@ namespace TestAPI.Services
             System.Guid guid = System.Guid.NewGuid();
 
             insertCmd.CommandText = "insert into Employee (GUID ,dtcreated ,dtmodified ,dtdeleted , firstname ,lastname ,login ,password ,department ,role ,type ) "+
-                "values(@guid, @dtcreated,@dtmodified,@dtdeleted,@firstname,@lastname,@login,@password,@department,@role,@type)";
+                                                    "values(@guid, @dtcreated,@dtmodified,@dtdeleted,@firstname,@lastname,@login,@password,@department,@role,@type)";
             insertCmd.CommandType = CommandType.Text;
-            //insertCmd.Parameters.Add(new SqlParameter("@guid", guid.ToString()));
-            //insertCmd.Parameters.Add(new SqlParameter("@dtcreated", DateTime.Now));
-            //insertCmd.Parameters.Add(new SqlParameter("@dtmodified", DateTime.Now));
-            //insertCmd.Parameters.Add(new SqlParameter("@dtdeleted", DateTime.MaxValue));
-            //insertCmd.Parameters.Add(new SqlParameter("@firstname", empl.FirstName));
-            //insertCmd.Parameters.Add(new SqlParameter("@lastname", empl.LastName));
-            //insertCmd.Parameters.Add(new SqlParameter("@login", empl.Login));
-            //insertCmd.Parameters.Add(new SqlParameter("@password", empl.Password));
-            //insertCmd.Parameters.Add(new SqlParameter("@department", empl.Department));
-            //insertCmd.Parameters.Add(new SqlParameter("@role", empl.Role));
-            //insertCmd.Parameters.Add(new SqlParameter("@type", empl.Type));
-
+            
             insertCmd.Parameters.AddWithValue("guid", guid.ToString());
-            insertCmd.Parameters.AddWithValue("dtcreated", DateTime.Now);
-            insertCmd.Parameters.AddWithValue("dtmodified", DateTime.Now);
-            insertCmd.Parameters.AddWithValue("dtdeleted", DateTime.MaxValue);
+            insertCmd.Parameters.AddWithValue("dtcreated", "" + DateTime.Now);
+            insertCmd.Parameters.AddWithValue("dtmodified", "" + DateTime.Now);
+            insertCmd.Parameters.AddWithValue("dtdeleted", "" + DateTime.MaxValue);
             insertCmd.Parameters.AddWithValue("firstname", empl.FirstName);
             insertCmd.Parameters.AddWithValue("lastname", empl.LastName);
             insertCmd.Parameters.AddWithValue("login", empl.Login);
-            insertCmd.Parameters.AddWithValue("password", empl.Password);
-            insertCmd.Parameters.AddWithValue("department", empl.Department);
-            insertCmd.Parameters.AddWithValue("role", empl.Role);
-            insertCmd.Parameters.AddWithValue("type", empl.Type);
-
-            //insertCmd.Parameters.AddWithValue("$lastloggedin", empl.);
-            //insertCmd.Parameters.AddWithValue("$loggedout", empl.FirstName);
+            insertCmd.Parameters.AddWithValue("password", "" + empl.Password);
+            insertCmd.Parameters.AddWithValue("department", "" + empl.Department);
+            insertCmd.Parameters.AddWithValue("role", "" + empl.Role);
+            insertCmd.Parameters.AddWithValue("type", ""+empl.Type);
 
             insertCmd.ExecuteNonQuery();
 
@@ -79,11 +64,16 @@ namespace TestAPI.Services
         public bool DeleteEmployee(string OID)
         {
             connection.Open();
-
             var createTableCmd = connection.CreateCommand();
-            createTableCmd.CommandText = "Delete from Employee where guid='" + OID + "'";
+            createTableCmd.CommandText = "update Employee set dtdeleted =@dtdeleted " +
+                                                    " where guid=@guid";
             createTableCmd.CommandType = CommandType.Text;
 
+            createTableCmd.Parameters.AddWithValue("dtdeleted", "" + DateTime.Now);
+            createTableCmd.Parameters.AddWithValue("guid", OID);
+
+            createTableCmd.ExecuteNonQuery();
+       
             int sqlite_datareader = createTableCmd.ExecuteNonQuery();
             connection.Close();
             return sqlite_datareader > 0;
@@ -95,8 +85,8 @@ namespace TestAPI.Services
             connection.Open();
             var getRecords = connection.CreateCommand();
             var getTotalRecords = connection.CreateCommand();
-            getRecords.CommandText = "select  GUID GUID, firstname FirstName, lastname LastName, department Department, role Role  from Employee";
-            getTotalRecords.CommandText = "select Count(*)  from Employee";
+            getRecords.CommandText = "select  GUID GUID, firstname FirstName, lastname LastName, department Department, role Role, dtCreated DTCreated,dtModified DTModified,dtDeleted DTDeleted, login Login   from Employee where dtdeleted>'" + DateTime.Now + "';";
+            getTotalRecords.CommandText = "select Count(*)  from Employee where dtdeleted>'"+DateTime.Now+"';";
             if (limit > 0)
                 getRecords.CommandText += " limit " + limit;
             if (limit > 0)
@@ -112,7 +102,11 @@ namespace TestAPI.Services
                         FirstName = (string)dr["firstname"],
                         LastName = (string)dr["lastname"],
                         Department = (string)dr["department"],
-                        Role = (string)dr["role"]
+                        Role = (string)dr["role"],
+                        DTCreated = DateTime.Parse(dr["dtCreated"].ToString()),
+                        DTModified = DateTime.Parse(dr["dtModified"].ToString()),
+                        DTDeleted = DateTime.Parse(dr["dtDeleted"].ToString()),
+                        Login = (string)dr["login"]
 
                     }).ToList();
             return typeData;
@@ -124,8 +118,8 @@ namespace TestAPI.Services
             connection.Open();
             //var getRecords = connection.CreateCommand();
             var getTotalRecords = connection.CreateCommand();
-            //getRecords.CommandText = "select  OID OID,title Title, firstname FirstName, lastname LastName, email Email, dob DOB, phonenumber PhoneNumber  from User";
-            getTotalRecords.CommandText = "select Count(*)  from User where OID='"+ workerID + "''";
+            getTotalRecords.CommandText = "select Count(*)  from Employee where guid='"+ workerID + "'";
+            getTotalRecords.CommandType = CommandType.Text;
             RowCount = Convert.ToInt32(getTotalRecords.ExecuteScalar());
             if (RowCount > 0)
             {
@@ -136,7 +130,7 @@ namespace TestAPI.Services
                     insertCmd.CommandText = "INSERT INTO Log VALUES('"+Guid.NewGuid().ToString()+"','"+DateTime.Now+"','"+ (toLogIn?LogType.Loggin:LogType.Logout)+"','"+ workerID + "','')";
                     insertCmd.ExecuteNonQuery();
 
-                    insertCmd.CommandText = "Update Employee set LastLoggedIn='"+DateTime.Now+"' where OID='"+ workerID + "'";
+                    insertCmd.CommandText = "Update Employee set LastLoggedIn='"+DateTime.Now+"' where guid='"+ workerID + "'";
                     insertCmd.ExecuteNonQuery();
 
                     transaction.Commit();
@@ -150,10 +144,19 @@ namespace TestAPI.Services
         {
             connection.Open();
             var getTotalRecords = connection.CreateCommand();
-            getTotalRecords.CommandText = "UPDATE Employee SET dname = :dname, loc = :loc WHERE deptno = @deptno";
-            //getTotalRecords.Parameters.Add("param1", 30);
-            //getTotalRecords.Parameters.Add("param2", "SALES");
-            //getTotalRecords.Parameters.Add("param3", "CHICAGO");
+            getTotalRecords.CommandText = "update Employee set dtmodified =@dtmodified, firstname=@firstname ,lastname =@lastname , department=@department ,role=@role ,type =@type " +
+                                                    " where login=@login";
+            getTotalRecords.CommandType = CommandType.Text;
+
+            
+            getTotalRecords.Parameters.AddWithValue("dtmodified", "" + DateTime.Now);
+            getTotalRecords.Parameters.AddWithValue("firstname", empl.FirstName);
+            getTotalRecords.Parameters.AddWithValue("lastname", empl.LastName);
+            getTotalRecords.Parameters.AddWithValue("login", empl.Login);
+            getTotalRecords.Parameters.AddWithValue("department", "" + empl.Department);
+            getTotalRecords.Parameters.AddWithValue("role", "" + empl.Role);
+            getTotalRecords.Parameters.AddWithValue("type", "" + empl.Type);
+
             getTotalRecords.ExecuteNonQuery();
             connection.Close();
             return empl;

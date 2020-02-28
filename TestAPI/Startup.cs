@@ -19,6 +19,7 @@ namespace TestAPI
             services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_2_1);
             services.AddSingleton<IUserServices, UserService>();
             services.AddSingleton<IEmployeeServices, EmployeeService>();
+            services.AddSingleton<ILogService, LogService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
