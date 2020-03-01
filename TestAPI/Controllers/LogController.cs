@@ -25,9 +25,9 @@ namespace TestAPI.Controllers
             DateTime tillD;
             
             if (!DateTime.TryParse(from, out fromD))
-                fromD = DateTime.Now.AddDays(-10);
+                fromD = DateTime.Now.AddDays(-10).Date;
             if (!DateTime.TryParse(from, out tillD))
-                tillD = DateTime.Now.AddDays(10);
+                tillD = DateTime.Now.AddDays(10).Date;
 
             List<Log> logs =_service.GetLogs(guid, fromD, tillD);
             return Ok(logs);

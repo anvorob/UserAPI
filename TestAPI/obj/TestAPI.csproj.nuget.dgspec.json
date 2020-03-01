@@ -1,23 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\anatoliiv\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj": {}
+    "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\anatoliiv\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj": {
+    "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\anatoliiv\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj",
+        "projectUniqueName": "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj",
         "projectName": "TestAPI",
-        "projectPath": "C:\\Users\\anatoliiv\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj",
-        "packagesPath": "C:\\Users\\anatoliiv\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\anatoliiv\\Documents\\GitHub\\UserAPI\\TestAPI\\obj\\",
+        "projectPath": "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\TestAPI.csproj",
+        "packagesPath": "C:\\Users\\Anatolii\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Anatolii\\Documents\\GitHub\\UserAPI\\TestAPI\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "C:\\Users\\anatoliiv\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Anatolii\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -25,6 +22,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Users\\Anatolii\\source\\repos\\TestAPI\\TestAPI": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {

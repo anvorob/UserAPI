@@ -18,25 +18,24 @@ namespace TestAPI.Services
             connection = new SqliteConnection(sqlrCOn);
         }
 
-        public Employee AddEmployee(Employee empl)
+        public bool AddEmployee(Employee empl)
         {
             int RowCount=0;
-            DBConnection connection = new DBConnection(sqlrCOn);
-            connection.sqlite_conn.Open();
+            bool success = false;
+            connection.Open();
 
-            var createTableCmd = connection.sqlite_conn.CreateCommand();
+            var createTableCmd = connection.CreateCommand();
             createTableCmd.CommandText = "Select Count(*) from Employee where login='" + empl.Login + "'";
             createTableCmd.CommandType = CommandType.Text;
 
             RowCount = Convert.ToInt32(createTableCmd.ExecuteScalar());
-            //createTableCmd.ExecuteNonQuery();
-            //SqliteDataReader sqlite_datareader = createTableCmd.ExecuteReader();
+            
             if (RowCount != 0)
             {
-                connection.sqlite_conn.Close();
-                return null;
+                connection.Close();
+                return success;
             }
-            var insertCmd = connection.sqlite_conn.CreateCommand();
+            var insertCmd = connection.CreateCommand();
             System.Guid guid = System.Guid.NewGuid();
 
             insertCmd.CommandText = "insert into Employee (GUID ,dtcreated ,dtmodified ,dtdeleted , firstname ,lastname ,login ,password ,department ,role ,type ) "+
@@ -44,9 +43,9 @@ namespace TestAPI.Services
             insertCmd.CommandType = CommandType.Text;
             
             insertCmd.Parameters.AddWithValue("guid", guid.ToString());
-            insertCmd.Parameters.AddWithValue("dtcreated", "" + DateTime.Now);
-            insertCmd.Parameters.AddWithValue("dtmodified", "" + DateTime.Now);
-            insertCmd.Parameters.AddWithValue("dtdeleted", "" + DateTime.MaxValue);
+            insertCmd.Parameters.AddWithValue("dtcreated", "" + DateTime.Now.Ticks);
+            insertCmd.Parameters.AddWithValue("dtmodified", "" + DateTime.Now.Ticks);
+            insertCmd.Parameters.AddWithValue("dtdeleted", "" + DateTime.MaxValue.Ticks);
             insertCmd.Parameters.AddWithValue("firstname", empl.FirstName);
             insertCmd.Parameters.AddWithValue("lastname", empl.LastName);
             insertCmd.Parameters.AddWithValue("login", empl.Login);
@@ -55,10 +54,10 @@ namespace TestAPI.Services
             insertCmd.Parameters.AddWithValue("role", "" + empl.Role);
             insertCmd.Parameters.AddWithValue("type", ""+empl.Type);
 
-            insertCmd.ExecuteNonQuery();
-
-            connection.sqlite_conn.Close();
-            return empl;
+            if (insertCmd.ExecuteNonQuery() > 0)
+                success = true;
+            connection.Close();
+            return success;
         }
 
         public bool DeleteEmployee(string OID)
@@ -69,7 +68,7 @@ namespace TestAPI.Services
                                                     " where guid=@guid";
             createTableCmd.CommandType = CommandType.Text;
 
-            createTableCmd.Parameters.AddWithValue("dtdeleted", "" + DateTime.Now);
+            createTableCmd.Parameters.AddWithValue("dtdeleted", "" + DateTime.Now.Ticks);
             createTableCmd.Parameters.AddWithValue("guid", OID);
 
             createTableCmd.ExecuteNonQuery();
@@ -85,8 +84,8 @@ namespace TestAPI.Services
             connection.Open();
             var getRecords = connection.CreateCommand();
             var getTotalRecords = connection.CreateCommand();
-            getRecords.CommandText = "select  GUID GUID, firstname FirstName, lastname LastName, department Department, role Role, dtCreated DTCreated,dtModified DTModified,dtDeleted DTDeleted, login Login   from Employee where dtdeleted>'" + DateTime.Now + "';";
-            getTotalRecords.CommandText = "select Count(*)  from Employee where dtdeleted>'"+DateTime.Now+"';";
+            getRecords.CommandText = "select  GUID GUID, firstname FirstName, lastname LastName, department Department, role Role, dtCreated DTCreated,dtModified DTModified,dtDeleted DTDeleted, login Login   from Employee where dtdeleted>'" + DateTime.Now.Ticks + "';";
+            getTotalRecords.CommandText = "select Count(*)  from Employee where dtdeleted>"+DateTime.Now.Ticks + ";";
             if (limit > 0)
                 getRecords.CommandText += " limit " + limit;
             if (limit > 0)
@@ -103,22 +102,29 @@ namespace TestAPI.Services
                         LastName = (string)dr["lastname"],
                         Department = (string)dr["department"],
                         Role = (string)dr["role"],
-                        DTCreated = DateTime.Parse(dr["dtCreated"].ToString()),
-                        DTModified = DateTime.Parse(dr["dtModified"].ToString()),
-                        DTDeleted = DateTime.Parse(dr["dtDeleted"].ToString()),
+                        DTCreated = new DateTime(long.Parse(dr["dtCreated"].ToString())),
+                        DTModified = new DateTime(long.Parse(dr["dtModified"].ToString())),
+                        DTDeleted = new DateTime(long.Parse(dr["dtDeleted"].ToString())),
                         Login = (string)dr["login"]
 
                     }).ToList();
             return typeData;
         }
-
-        public DateTime LogTime(string workerID, bool toLogIn)
+        /// <summary>
+        /// Log in or log out Employee
+        /// </summary>
+        /// <param name="workerID"></param>
+        /// <param name="toLogIn"></param>
+        /// <returns></returns>
+        public DateTime LogTime(string employeeID, bool toLogIn)
         {
             int RowCount = 0;
+            if (IsLoggedIn(employeeID) && toLogIn)
+                return DateTime.MinValue;
             connection.Open();
             //var getRecords = connection.CreateCommand();
             var getTotalRecords = connection.CreateCommand();
-            getTotalRecords.CommandText = "select Count(*)  from Employee where guid='"+ workerID + "'";
+            getTotalRecords.CommandText = "select Count(*)  from Employee where guid='"+ employeeID + "'";
             getTotalRecords.CommandType = CommandType.Text;
             RowCount = Convert.ToInt32(getTotalRecords.ExecuteScalar());
             if (RowCount > 0)
@@ -127,10 +133,10 @@ namespace TestAPI.Services
                 {
                     var insertCmd = connection.CreateCommand();
 
-                    insertCmd.CommandText = "INSERT INTO Log VALUES('"+Guid.NewGuid().ToString()+"','"+DateTime.Now+"','"+ (toLogIn?LogType.Loggin:LogType.Logout)+"','"+ workerID + "','')";
+                    insertCmd.CommandText = "INSERT INTO Log VALUES('"+Guid.NewGuid().ToString()+"',"+DateTime.Now.Ticks + ",'"+ (toLogIn?LogType.Loggin:LogType.Logout)+"','"+ employeeID + "','')";
                     insertCmd.ExecuteNonQuery();
 
-                    insertCmd.CommandText = "Update Employee set LastLoggedIn='"+DateTime.Now+"' where guid='"+ workerID + "'";
+                    insertCmd.CommandText = "Update Employee set LastLoggedIn='"+DateTime.Now.Ticks + "' where guid='"+ employeeID + "'";
                     insertCmd.ExecuteNonQuery();
 
                     transaction.Commit();
@@ -139,7 +145,30 @@ namespace TestAPI.Services
             connection.Close();
             return DateTime.Now;
         }
+        /// <summary>
+        /// Method check if Employee is logged in or not
+        /// </summary>
+        /// <param name="employeeID"></param>
+        /// <returns></returns>
+        public bool IsLoggedIn(string employeeID)
+        {
+            bool loggedIn=false;
+            connection.Open();
+            
+            var getTotalRecords = connection.CreateCommand();
+            getTotalRecords.CommandText = "select type  from Log where resource='" + employeeID + "' order by dtcreated DESC where type in (0,1)";
+            getTotalRecords.CommandType = CommandType.Text;
+            SqliteDataReader sqlite_datareader = getTotalRecords.ExecuteReader();
+            while (sqlite_datareader.Read())
+            {
+                loggedIn = sqlite_datareader.GetInt32(0) == 0;
+                break;
+            }
+            
+            connection.Close();
 
+            return loggedIn;
+        }
         public Employee UpdateEmployee(Employee empl)
         {
             connection.Open();
@@ -149,7 +178,7 @@ namespace TestAPI.Services
             getTotalRecords.CommandType = CommandType.Text;
 
             
-            getTotalRecords.Parameters.AddWithValue("dtmodified", "" + DateTime.Now);
+            getTotalRecords.Parameters.AddWithValue("dtmodified", "" + DateTime.Now.Ticks);
             getTotalRecords.Parameters.AddWithValue("firstname", empl.FirstName);
             getTotalRecords.Parameters.AddWithValue("lastname", empl.LastName);
             getTotalRecords.Parameters.AddWithValue("login", empl.Login);
@@ -162,6 +191,48 @@ namespace TestAPI.Services
             return empl;
         }
 
-        
+        public List<ShiftLog> LogWorkingHours(string employeeID)
+        {
+            connection.Open();
+            
+            var getTotalRecords = connection.CreateCommand();
+            getTotalRecords.CommandText = "select dtcreated DTCreated, type  from Log where resource='" + employeeID + "' order by dtcreated ASC where type in (0,1)";
+            getTotalRecords.CommandType = CommandType.Text;
+            SqliteDataReader sqlite_datareader = getTotalRecords.ExecuteReader();
+            
+            List<Log> logList = sqlite_datareader.Cast<IDataRecord>()
+                    .Select(dr => new Log
+                    {
+                        OID = dr["guid"].ToString(),
+                        Type = (LogType)int.Parse(dr["Type"].ToString()),
+                        //Resource = (Employee)dr["Resource"],
+                        Comment = (string)dr["Comment"],
+                        DTCreated = new DateTime(long.Parse(dr["DTCreated"].ToString()))
+
+                    }).ToList();
+
+            connection.Close();
+            List<ShiftLog> shiftLogList = new List<ShiftLog>();
+            for (int a=0; a< logList.Count;a++)
+            {
+                ShiftLog sh = new ShiftLog();
+                sh.TimeFrom = logList[a].DTCreated;
+                if (logList[a + 1].Type == LogType.Logout)
+                {
+                    sh.TimeTill = logList[a + 1].DTCreated;
+                    a++;
+                }
+                else
+                    sh.TimeTill = sh.TimeTill.AddHours(9);// Temporary; TODO: add shift dictionary to get default working hours
+                shiftLogList.Add(sh);
+            }
+            return shiftLogList;
+        }
+
+        public double GetHolidayBalance(string employeeID)
+        {
+
+            return 0;
+        }
     }
 }

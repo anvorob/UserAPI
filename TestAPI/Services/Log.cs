@@ -21,7 +21,7 @@ namespace TestAPI.Services
             connection.Open();
             
             var insertCmd = connection.CreateCommand();
-            insertCmd.CommandText = "INSERT INTO Log VALUES('" + Guid.NewGuid().ToString() + "','" + DateTime.Now + "','" + log.Type + "','" + log.Resource + "','"+ log.Comment + "')";
+            insertCmd.CommandText = "INSERT INTO Log VALUES('" + Guid.NewGuid().ToString() + "','" + DateTime.Now.Ticks + "','" + log.Type + "','" + log.Resource + "','"+ log.Comment + "')";
             insertCmd.ExecuteNonQuery();
             connection.Close();
         }
@@ -32,7 +32,7 @@ namespace TestAPI.Services
             connection.Open();
 
             var insertCmd = connection.CreateCommand();
-            insertCmd.CommandText = "Select DTCreated DTCreated,Type Type,Resource Resource,Comment Comment from Log where DTCreated between '" + from + "' and '" + till + "'";
+            insertCmd.CommandText = "Select guid guid, DTCreated DTCreated,Type Type,Resource Resource,Comment Comment from Log where DTCreated between '" + from.Ticks + "' and '" + till.Ticks + "'";
             if(!string.IsNullOrEmpty(guid))
                 insertCmd.CommandText +=" and Resource='"+guid+"';";
             insertCmd.ExecuteNonQuery();
@@ -42,10 +42,11 @@ namespace TestAPI.Services
             List<Log> typeData = sqlite_datareader.Cast<IDataRecord>()
                     .Select(dr => new Log
                     {
-                        //Type = (LogType)dr["Type"],
+                        OID = dr["guid"].ToString(),
+                        Type = (LogType)int.Parse(dr["Type"].ToString()),
                         //Resource = (Employee)dr["Resource"],
                         Comment = (string)dr["Comment"],
-                        DTCreated = DateTime.Parse(dr["DTCreated"].ToString())
+                        DTCreated = new DateTime(long.Parse(dr["DTCreated"].ToString()))
                         
                     }).ToList();
             connection.Close();

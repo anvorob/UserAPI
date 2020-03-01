@@ -28,4 +28,12 @@ namespace TestAPI.Models
             Message = message;
         }
     }
+
+    public class ShiftLog
+    {
+        public DateTime TimeFrom { get; set; }
+        public DateTime TimeTill { get; set; }
+        public double Hours { get; set; }
+
+    }
 }

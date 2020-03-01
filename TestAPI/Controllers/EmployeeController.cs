@@ -23,7 +23,9 @@ namespace TestAPI.Controllers
         public ActionResult<bool> Loggin(string OID)
         {
             //ProductionWorker worker = new ProductionWorker();
-            _service.LogTime(OID, true);
+            DateTime loggedTime =_service.LogTime(OID, true);
+            if (loggedTime == DateTime.MinValue)
+                return Accepted(new ReturnMessage("Employee has already logged in"));
             return Ok();
         }
 
@@ -41,7 +43,9 @@ namespace TestAPI.Controllers
         {
             //Employee em = new ProductionWorker();
             //ProductionWorker prod = new ProductionWorker();
-            _service.AddEmployee(empl);
+            if(!_service.AddEmployee(empl))
+                return BadRequest(new ReturnMessage("User with this login already exist"));
+
             return Ok(empl);
         }
 
