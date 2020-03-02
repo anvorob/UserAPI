@@ -1,0 +1,13 @@
+
+*.suo
+*.cache
+TestAPI/obj/TestAPI.csproj.nuget.g.targets
+TestAPI/obj/TestAPI.csproj.nuget.dgspec.json
+TestAPI/obj/TestAPI.csproj.nuget.g.props
+TestAPI/obj/TestAPI.csproj.nuget.cache
+TestAPI/obj/project.assets.json
+TestAPI/obj/Debug/netcoreapp2.1/TestAPI.csprojAssemblyReference.cache
+TestAPI/obj/Debug/netcoreapp2.1/TestAPI.assets.cache
+TestAPI.v12.suo
+.vs/TestAPI/v16/Server/sqlite3/storage.ide-wal
+.vs/TestAPI/v16/Server/sqlite3/storage.ide-shm
