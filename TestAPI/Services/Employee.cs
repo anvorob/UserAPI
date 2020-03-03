@@ -212,6 +212,10 @@ namespace TestAPI.Services
                     }).ToList();
 
             connection.Close();
+
+            IShiftService _shiftService = new ShiftService();
+            List<Shift> shiftList = _shiftService.GetShifts();
+
             List<ShiftLog> shiftLogList = new List<ShiftLog>();
             for (int a=0; a< logList.Count;a++)
             {
@@ -219,11 +223,16 @@ namespace TestAPI.Services
                 sh.TimeFrom = logList[a].DTCreated;
                 if (logList[a + 1].Type == LogType.Logout)
                 {
+                    // in case worker logs in and out we skip second iteration.
                     sh.TimeTill = logList[a + 1].DTCreated;
                     a++;
                 }
                 else
-                    sh.TimeTill = sh.TimeTill.AddHours(9);// Temporary; TODO: add shift dictionary to get default working hours
+                {
+                    // If worker didnt log out set default date span
+                    Shift ss = shiftList.FirstOrDefault(shft => shft.Category == EventCategory.WorkingTime);
+                    sh.TimeTill = sh.TimeTill.AddHours(ss.Duration.TotalHours);// Temporary; TODO: add shift dictionary to get default working hours
+                }
                 shiftLogList.Add(sh);
             }
             return shiftLogList;

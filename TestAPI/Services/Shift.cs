@@ -62,7 +62,7 @@ namespace TestAPI.Services
             connection.Open();
             var getRecords = connection.CreateCommand();
             var getTotalRecords = connection.CreateCommand();
-            getRecords.CommandText = "select  GUID GUID, dayOfTheWeekFrom dayOfTheWeekFrom, dayOfTheWeekTill dayOfTheWeekTill, startTime startTime, endTime endTime from Shift;";
+            getRecords.CommandText = "select  DayOfWeekFlags DayOfWeekFlags, StartDate StartDate, StartTime StartTime, Duration Duration, Category Category from Shift;";
             getTotalRecords.CommandText = "select Count(*)  from Shift where dtdeleted>" + DateTime.Now.Ticks + ";";
             
             getRecords.CommandType = CommandType.Text;
@@ -72,15 +72,11 @@ namespace TestAPI.Services
             List<Shift> typeData = sqlite_datareader.Cast<IDataRecord>()
                     .Select(dr => new Shift
                     {
-                        GUID = (string)dr["GUID"],
-                        FirstName = (string)dr["firstname"],
-                        LastName = (string)dr["lastname"],
-                        Department = (string)dr["department"],
-                        Role = (string)dr["role"],
-                        DTCreated = new DateTime(long.Parse(dr["dtCreated"].ToString())),
-                        DTModified = new DateTime(long.Parse(dr["dtModified"].ToString())),
-                        DTDeleted = new DateTime(long.Parse(dr["dtDeleted"].ToString())),
-                        Login = (string)dr["login"]
+                        DayOfWeekFlags = (DayOfWeekFlag)dr["DayOfWeekFlags"],
+                        StartDate = new DateTime(long.Parse(dr["StartDate"].ToString())),
+                        StartTime = (TimeSpan)dr["StartTime"],
+                        Duration = (TimeSpan)dr["Duration"],
+                        Category = (EventCategory)dr["Category"]
 
                     }).ToList();
             return typeData;

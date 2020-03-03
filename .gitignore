@@ -1,6 +1,8 @@
 
 *.suo
 *.cache
+TestAPI/bin/Debug/
+TestAPI/obj/Debug/
 TestAPI/obj/TestAPI.csproj.nuget.g.targets
 TestAPI/obj/TestAPI.csproj.nuget.dgspec.json
 TestAPI/obj/TestAPI.csproj.nuget.g.props
