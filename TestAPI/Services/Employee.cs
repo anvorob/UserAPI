@@ -71,8 +71,6 @@ namespace TestAPI.Services
             createTableCmd.Parameters.AddWithValue("dtdeleted", "" + DateTime.Now.Ticks);
             createTableCmd.Parameters.AddWithValue("guid", OID);
 
-            createTableCmd.ExecuteNonQuery();
-       
             int sqlite_datareader = createTableCmd.ExecuteNonQuery();
             connection.Close();
             return sqlite_datareader > 0;
@@ -110,6 +108,8 @@ namespace TestAPI.Services
                     }).ToList();
             return typeData;
         }
+        
+
         /// <summary>
         /// Log in or log out Employee
         /// </summary>

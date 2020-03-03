@@ -1,25 +1,89 @@
-﻿using System;
+﻿using Microsoft.Data.Sqlite;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using TestAPI.Models;
 
 namespace TestAPI.Services
 {
-    public class Shift : IShiftService
+    public class ShiftService : IShiftService
     {
+        private string sqlrCOn = @"data source=test.db;";
+        private SqliteConnection connection;
+        public ShiftService()
+        {
+            connection = new SqliteConnection(sqlrCOn);
+        }
         public bool AddShift(Shift shift)
         {
-            throw new NotImplementedException();
+            bool success = false;
+            connection.Open();
+
+            var insertCmd = connection.CreateCommand();
+            System.Guid guid = System.Guid.NewGuid();
+
+            insertCmd.CommandText = "insert into Shift ( DayOfWeekFlags ,StartDate ,startTime ,Duration,EndTime,Category)" +
+                                                    "values( @DayOfWeekFlags ,@StartDate ,@startTime ,@Duration,@EndTime,@Category )";
+            insertCmd.CommandType = CommandType.Text;
+
+            insertCmd.Parameters.AddWithValue("DayOfWeekFlags", shift.DayOfWeekFlags);
+            insertCmd.Parameters.AddWithValue("StartDate", shift.StartDate);
+            insertCmd.Parameters.AddWithValue("startTime", shift.StartTime);
+            insertCmd.Parameters.AddWithValue("Duration", "" + shift.Duration);
+            insertCmd.Parameters.AddWithValue("EndTime", "" + shift.EndTime);
+            insertCmd.Parameters.AddWithValue("Category", "" + shift.Category);
+            
+
+            if (insertCmd.ExecuteNonQuery() > 0)
+                success = true;
+            connection.Close();
+            return success;
         }
 
         public bool DeleteShift(string shiftID)
         {
-            throw new NotImplementedException();
+            connection.Open();
+            var createTableCmd = connection.CreateCommand();
+            createTableCmd.CommandText = "Delete Shift where OID=@OID";
+            createTableCmd.CommandType = CommandType.Text;
+
+            createTableCmd.Parameters.AddWithValue("OID", shiftID);
+
+            int sqlite_datareader = createTableCmd.ExecuteNonQuery();
+            connection.Close();
+            return sqlite_datareader > 0;
         }
 
         public List<Shift> GetShifts()
         {
-            throw new NotImplementedException();
+            int RowCount = 0;
+            connection.Open();
+            var getRecords = connection.CreateCommand();
+            var getTotalRecords = connection.CreateCommand();
+            getRecords.CommandText = "select  GUID GUID, dayOfTheWeekFrom dayOfTheWeekFrom, dayOfTheWeekTill dayOfTheWeekTill, startTime startTime, endTime endTime from Shift;";
+            getTotalRecords.CommandText = "select Count(*)  from Shift where dtdeleted>" + DateTime.Now.Ticks + ";";
+            
+            getRecords.CommandType = CommandType.Text;
+            RowCount = Convert.ToInt32(getTotalRecords.ExecuteScalar());
+            SqliteDataReader sqlite_datareader = getRecords.ExecuteReader();
+            //sqlite_datareader.HasRows;
+            List<Shift> typeData = sqlite_datareader.Cast<IDataRecord>()
+                    .Select(dr => new Shift
+                    {
+                        GUID = (string)dr["GUID"],
+                        FirstName = (string)dr["firstname"],
+                        LastName = (string)dr["lastname"],
+                        Department = (string)dr["department"],
+                        Role = (string)dr["role"],
+                        DTCreated = new DateTime(long.Parse(dr["dtCreated"].ToString())),
+                        DTModified = new DateTime(long.Parse(dr["dtModified"].ToString())),
+                        DTDeleted = new DateTime(long.Parse(dr["dtDeleted"].ToString())),
+                        Login = (string)dr["login"]
+
+                    }).ToList();
+            return typeData;
         }
 
         public bool UpdateShift(Shift shift)
