@@ -80,5 +80,16 @@ namespace TestAPI.Controllers
             else
                 return BadRequest();
         }
+
+        [HttpGet]
+        [Route("GetWorkHours")]
+        public ActionResult<List<ShiftLog>> LogWorkingHours(string employeeID)
+        {
+            if(string.IsNullOrEmpty(employeeID))
+                return BadRequest(new ReturnMessage("Employee ID is missing"));
+            List<ShiftLog> shiftLog = new List<ShiftLog>();
+            shiftLog = _service.LogWorkingHours(employeeID);
+            return Ok(shiftLog);
+        }
     }
 }

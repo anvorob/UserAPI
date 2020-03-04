@@ -10,14 +10,22 @@ namespace TestAPI.Models
         public DayOfWeekFlag DayOfWeekFlags { get; set; }
 
         private DateTime _dtStart { get; set; }
-        public DateTime StartDate { get { return _dtStart.Date; } set { _dtStart = value.Add(_dtStart.TimeOfDay); } }
-        public TimeSpan StartTime { get { return _dtStart.TimeOfDay; } set { _dtStart = _dtStart.Date.Add(value); } }
+        public DateTime StartDate { 
+            get { return _dtStart.Date; } 
+            set { _dtStart = value.Add(_dtStart.TimeOfDay); } }
+        public TimeSpan StartTime { 
+            get { return _dtStart.TimeOfDay; } 
+            set { _dtStart = _dtStart.Date.Add(value); } }
 
         private int _duration;
-        public TimeSpan Duration { get { return TimeSpan.FromSeconds(_duration); } set { _duration = (int)Math.Round(value.TotalSeconds); } }
+        public TimeSpan Duration { 
+            get { return TimeSpan.FromSeconds(_duration); } 
+            set { _duration = (int)Math.Round(value.TotalSeconds); } }
 
         public TimeSpan EndTime { get { return StartTime.Add(Duration); } }
         public EventCategory Category { get; set; }
+        public bool Paid { get; set; }
+
         
     }
 

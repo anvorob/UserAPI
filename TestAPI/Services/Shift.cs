@@ -63,20 +63,20 @@ namespace TestAPI.Services
             var getRecords = connection.CreateCommand();
             var getTotalRecords = connection.CreateCommand();
             getRecords.CommandText = "select  DayOfWeekFlags DayOfWeekFlags, StartDate StartDate, StartTime StartTime, Duration Duration, Category Category from Shift;";
-            getTotalRecords.CommandText = "select Count(*)  from Shift where dtdeleted>" + DateTime.Now.Ticks + ";";
+            getTotalRecords.CommandText = "select Count(*)  from Shift ;";
             
             getRecords.CommandType = CommandType.Text;
             RowCount = Convert.ToInt32(getTotalRecords.ExecuteScalar());
             SqliteDataReader sqlite_datareader = getRecords.ExecuteReader();
-            //sqlite_datareader.HasRows;
+
             List<Shift> typeData = sqlite_datareader.Cast<IDataRecord>()
                     .Select(dr => new Shift
                     {
-                        DayOfWeekFlags = (DayOfWeekFlag)dr["DayOfWeekFlags"],
-                        StartDate = new DateTime(long.Parse(dr["StartDate"].ToString())),
-                        StartTime = (TimeSpan)dr["StartTime"],
-                        Duration = (TimeSpan)dr["Duration"],
-                        Category = (EventCategory)dr["Category"]
+                        DayOfWeekFlags = (DayOfWeekFlag)Enum.Parse(typeof(DayOfWeekFlag), dr["DayOfWeekFlags"].ToString()),
+                        StartDate = DateTime.Parse(dr["StartDate"].ToString()),
+                        StartTime = (TimeSpan)TimeSpan.Parse(dr["StartTime"].ToString()),
+                        Duration = (TimeSpan)TimeSpan.Parse(dr["Duration"].ToString()),
+                        Category = (EventCategory)Enum.Parse(typeof(EventCategory), dr["Category"].ToString())
 
                     }).ToList();
             return typeData;

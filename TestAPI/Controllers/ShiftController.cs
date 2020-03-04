@@ -21,8 +21,10 @@ namespace TestAPI.Controllers
         [HttpPost]
         public ActionResult AddShift(Shift shift)
         {
-            _service.AddShift(shift);
-            return Ok();
+            if (_service.AddShift(shift))
+                return Ok();
+            else
+                return BadRequest();
         }
         [HttpGet]
         public ActionResult<List<Shift>> GetShifts()
