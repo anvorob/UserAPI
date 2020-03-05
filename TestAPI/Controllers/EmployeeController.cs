@@ -20,12 +20,17 @@ namespace TestAPI.Controllers
 
         [HttpGet]
         [Route("Login")]
-        public ActionResult<bool> Loggin(string OID)
+        public ActionResult<bool> Loggin(string employeeID)
         {
             //ProductionWorker worker = new ProductionWorker();
-            DateTime loggedTime =_service.LogTime(OID, true);
-            if (loggedTime == DateTime.MinValue)
-                return Accepted(new ReturnMessage("Employee has already logged in"));
+            try
+            {
+                _service.LogTime(employeeID, true);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ReturnMessage(string.Format("Failed to log because {0}", ex.Message)));
+            }
             return Ok();
         }
 
@@ -34,8 +39,14 @@ namespace TestAPI.Controllers
         public ActionResult<bool> Logout(string OID)
         {
             //ProductionWorker worker = new ProductionWorker();
-            _service.LogTime(OID, false);
-            return Ok();
+            try
+            {
+                _service.LogTime(OID, false);
+            }catch(Exception ex)
+            {
+                return BadRequest(new ReturnMessage(string.Format("Failed to log because {0}",ex.Message)));
+            }
+            return Ok(new ReturnMessage("Employee logged out"));
         }
 
         [HttpPost]
@@ -90,6 +101,14 @@ namespace TestAPI.Controllers
             List<ShiftLog> shiftLog = new List<ShiftLog>();
             shiftLog = _service.LogWorkingHours(employeeID);
             return Ok(shiftLog);
+        }
+
+        [HttpGet]
+        [Route("GetHolidayBalance")]
+        public ActionResult GetHolidayBalance(string employeeID)
+        {
+            
+            return Ok(_service.GetHolidayBalance(employeeID));
         }
     }
 }

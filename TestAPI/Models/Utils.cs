@@ -34,6 +34,7 @@ namespace TestAPI.Models
         public DateTime TimeFrom { get; set; }
         public DateTime TimeTill { get; set; }
         public double Hours { get; set; }
+        public double Rate { get; set; }
 
     }
 }

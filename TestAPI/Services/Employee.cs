@@ -18,7 +18,7 @@ namespace TestAPI.Services
             connection = new SqliteConnection(sqlrCOn);
         }
 
-        public bool AddEmployee(Employee empl)
+        public bool AddEmployee(ProductionWorker empl)
         {
             int RowCount=0;
             bool success = false;
@@ -38,8 +38,8 @@ namespace TestAPI.Services
             var insertCmd = connection.CreateCommand();
             System.Guid guid = System.Guid.NewGuid();
 
-            insertCmd.CommandText = "insert into Employee (GUID ,dtcreated ,dtmodified ,dtdeleted , firstname ,lastname ,login ,password ,department ,role ,type ) "+
-                                                    "values(@guid, @dtcreated,@dtmodified,@dtdeleted,@firstname,@lastname,@login,@password,@department,@role,@type)";
+            insertCmd.CommandText = "insert into Employee (GUID ,dtcreated ,dtmodified ,dtdeleted , firstname ,lastname ,login ,password ,department ,role ,type,rate ) "+
+                                                    "values(@guid, @dtcreated,@dtmodified,@dtdeleted,@firstname,@lastname,@login,@password,@department,@role,@type,@rate)";
             insertCmd.CommandType = CommandType.Text;
             
             insertCmd.Parameters.AddWithValue("guid", guid.ToString());
@@ -53,6 +53,7 @@ namespace TestAPI.Services
             insertCmd.Parameters.AddWithValue("department", "" + empl.Department);
             insertCmd.Parameters.AddWithValue("role", "" + empl.Role);
             insertCmd.Parameters.AddWithValue("type", ""+empl.Type);
+            insertCmd.Parameters.AddWithValue("rate", "" + empl.Rate);
 
             if (insertCmd.ExecuteNonQuery() > 0)
                 success = true;
@@ -118,22 +119,32 @@ namespace TestAPI.Services
         /// <returns></returns>
         public DateTime LogTime(string employeeID, bool toLogIn)
         {
-            int RowCount = 0;
+            double EmployeeRate = 0;
             if (IsLoggedIn(employeeID) && toLogIn)
-                return DateTime.MinValue;
+                throw new Exception("employee already logged in");
+
+            IShiftService _shiftService = new ShiftService();
+            List<Shift> shiftList = _shiftService.GetShifts();
+            Shift ss = shiftList.FirstOrDefault(shft => shft.Category == EventCategory.WorkingTime);
+            if (ss.StartTime > DateTime.Now.TimeOfDay && ss.EndTime < DateTime.Now.TimeOfDay)
+                throw new Exception("loggin outside working hours");
             connection.Open();
             //var getRecords = connection.CreateCommand();
             var getTotalRecords = connection.CreateCommand();
-            getTotalRecords.CommandText = "select Count(*)  from Employee where guid='"+ employeeID + "'";
+            getTotalRecords.CommandText = "select rate  from Employee where guid='"+ employeeID + "'";
             getTotalRecords.CommandType = CommandType.Text;
-            RowCount = Convert.ToInt32(getTotalRecords.ExecuteScalar());
-            if (RowCount > 0)
+            EmployeeRate = Convert.ToDouble(getTotalRecords.ExecuteScalar());
+            if (EmployeeRate > 0)
             {
                 using (var transaction = connection.BeginTransaction())
                 {
                     var insertCmd = connection.CreateCommand();
 
-                    insertCmd.CommandText = "INSERT INTO Log VALUES('"+Guid.NewGuid().ToString()+"',"+DateTime.Now.Ticks + ",'"+ (toLogIn?LogType.Loggin:LogType.Logout)+"','"+ employeeID + "','')";
+                    insertCmd.CommandText = "INSERT INTO Log VALUES('"+Guid.NewGuid().ToString()+"',"+
+                                                                        DateTime.Now.Ticks + ",'"+ 
+                                                                        (toLogIn?(int)LogType.Loggin: (int)LogType.Logout)+"','"+ 
+                                                                        employeeID + "','"+  
+                                                                        ((toLogIn)?EmployeeRate.ToString():"") + "')";
                     insertCmd.ExecuteNonQuery();
 
                     insertCmd.CommandText = "Update Employee set LastLoggedIn='"+DateTime.Now.Ticks + "' where guid='"+ employeeID + "'";
@@ -156,7 +167,7 @@ namespace TestAPI.Services
             connection.Open();
             
             var getTotalRecords = connection.CreateCommand();
-            getTotalRecords.CommandText = "select type  from Log where resource='" + employeeID + "' order by dtcreated DESC where type in (0,1)";
+            getTotalRecords.CommandText = "select type  from Log where resource='" + employeeID + "'and type in (0,1) and dtcreated>'"+DateTime.Now.Date.Ticks+"' order by dtcreated DESC";
             getTotalRecords.CommandType = CommandType.Text;
             SqliteDataReader sqlite_datareader = getTotalRecords.ExecuteReader();
             while (sqlite_datareader.Read())
@@ -169,11 +180,11 @@ namespace TestAPI.Services
 
             return loggedIn;
         }
-        public Employee UpdateEmployee(Employee empl)
+        public Employee UpdateEmployee(ProductionWorker empl)
         {
             connection.Open();
             var getTotalRecords = connection.CreateCommand();
-            getTotalRecords.CommandText = "update Employee set dtmodified =@dtmodified, firstname=@firstname ,lastname =@lastname , department=@department ,role=@role ,type =@type " +
+            getTotalRecords.CommandText = "update Employee set dtmodified =@dtmodified, firstname=@firstname ,lastname =@lastname , department=@department ,role=@role ,type =@type, rate=@rate " +
                                                     " where login=@login";
             getTotalRecords.CommandType = CommandType.Text;
 
@@ -184,6 +195,7 @@ namespace TestAPI.Services
             getTotalRecords.Parameters.AddWithValue("login", empl.Login);
             getTotalRecords.Parameters.AddWithValue("department", "" + empl.Department);
             getTotalRecords.Parameters.AddWithValue("role", "" + empl.Role);
+            getTotalRecords.Parameters.AddWithValue("rate", "" + empl.Rate);
             getTotalRecords.Parameters.AddWithValue("type", "" + empl.Type);
 
             getTotalRecords.ExecuteNonQuery();
@@ -196,7 +208,7 @@ namespace TestAPI.Services
             connection.Open();
             
             var getTotalRecords = connection.CreateCommand();
-            getTotalRecords.CommandText = "select dtcreated DTCreated, type  from Log where resource='" + employeeID + "' order by dtcreated ASC where type in (0,1)";
+            getTotalRecords.CommandText = "select guid guid, dtcreated DTCreated, type, comment  from Log where resource='" + employeeID + "' and type in (0,1) order by dtcreated ASC ;";
             getTotalRecords.CommandType = CommandType.Text;
             SqliteDataReader sqlite_datareader = getTotalRecords.ExecuteReader();
             
@@ -221,17 +233,25 @@ namespace TestAPI.Services
             {
                 ShiftLog sh = new ShiftLog();
                 sh.TimeFrom = logList[a].DTCreated;
-                if (logList[a + 1].Type == LogType.Logout)
+                // Fetch rate for this shift from comments
+                if (!string.IsNullOrEmpty(logList[a].Comment))
+                    sh.Rate = double.Parse(logList[a].Comment);
+
+                if (a!= logList.Count-1 &&  logList[a + 1].Type == LogType.Logout)
                 {
                     // in case worker logs in and out we skip second iteration.
                     sh.TimeTill = logList[a + 1].DTCreated;
+                    TimeSpan durationTmsp = sh.TimeTill.TimeOfDay - sh.TimeFrom.TimeOfDay;
+                    sh.Hours = Math.Round(durationTmsp.TotalHours);
                     a++;
                 }
                 else
                 {
                     // If worker didnt log out set default date span
                     Shift ss = shiftList.FirstOrDefault(shft => shft.Category == EventCategory.WorkingTime);
-                    sh.TimeTill = sh.TimeTill.AddHours(ss.Duration.TotalHours);// Temporary; TODO: add shift dictionary to get default working hours
+                    TimeSpan durationTmsp = ss.EndTime - sh.TimeFrom.TimeOfDay;
+                    sh.Hours = Math.Round(durationTmsp.TotalHours,2);
+                    sh.TimeTill = sh.TimeFrom.AddMinutes(durationTmsp.TotalMinutes);// Temporary; TODO: add shift dictionary to get default working hours
                 }
                 shiftLogList.Add(sh);
             }
@@ -240,8 +260,12 @@ namespace TestAPI.Services
 
         public double GetHolidayBalance(string employeeID)
         {
+            double minHolRate = 0.083475;
+            List < ShiftLog> shiftList = this.LogWorkingHours(employeeID);
 
-            return 0;
+            double holidayPay = shiftList.Sum(s => s.Hours * s.Rate* minHolRate);
+            double holidayHours = shiftList.Sum(s => s.Hours * minHolRate);
+            return holidayHours;
         }
     }
 }

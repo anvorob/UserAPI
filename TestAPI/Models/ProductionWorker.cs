@@ -12,6 +12,7 @@ namespace TestAPI.Models
             Type = EmployeeType.Production;
         }
 
+        public double Rate { get; set; }
         public DateTime LastLoggedIn { get; set; }
         public DateTime LoggedOut { get; set; }
     }

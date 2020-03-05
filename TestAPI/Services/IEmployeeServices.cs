@@ -8,12 +8,13 @@ namespace TestAPI.Services
 {
     public interface IEmployeeServices
     {
-        bool AddEmployee(Employee empl);
-        Employee UpdateEmployee(Employee empl);
+        bool AddEmployee(ProductionWorker empl);
+        Employee UpdateEmployee(ProductionWorker empl);
         bool DeleteEmployee(string OID);
         List<ProductionWorker> GetEmployees(string searchWord, string searchField, int limit, int page);
         DateTime LogTime(string workerID, bool toLogIn);
         bool IsLoggedIn(string workerID);
         List<ShiftLog> LogWorkingHours(string employeeID);
+        double GetHolidayBalance(string employeeID);
     }
 }
