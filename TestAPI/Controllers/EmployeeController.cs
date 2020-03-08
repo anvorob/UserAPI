@@ -105,10 +105,32 @@ namespace TestAPI.Controllers
 
         [HttpGet]
         [Route("GetHolidayBalance")]
-        public ActionResult GetHolidayBalance(string employeeID)
+        public ActionResult<HolidayBalance> GetHolidayBalance(string employeeID)
         {
             
             return Ok(_service.GetHolidayBalance(employeeID));
+        }
+
+        [HttpPost]
+        [Route("ApplyForLeave")]
+        public ActionResult ApplyForLeave(string employeeID, string startDate, string endDate, string type)
+        {
+            _service.ApplyForLeave(employeeID,  startDate,  endDate);
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("ApproveLeave")]
+        public ActionResult ApproveLeave()
+        {
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("DenieRoute")]
+        public ActionResult DenieLeave()
+        {
+            return Ok();
         }
     }
 }

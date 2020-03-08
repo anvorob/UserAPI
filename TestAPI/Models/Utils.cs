@@ -34,7 +34,18 @@ namespace TestAPI.Models
         public DateTime TimeFrom { get; set; }
         public DateTime TimeTill { get; set; }
         public double Hours { get; set; }
+        public string DisplayHours { get; set; }
         public double Rate { get; set; }
 
+    }
+
+    public class HolidayBalance
+    {
+        public DateTime TimeFrom { get; set; }
+        public DateTime TimeTill { get; set; }
+        public double HoursTotal { get; set; }
+        public double HolidayPayTotal { get; set; }
+        public double HoursUsed { get; set; }
+        public double HoursOutstanding { get { return HoursTotal - HoursUsed; } }
     }
 }

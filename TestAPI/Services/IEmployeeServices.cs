@@ -15,6 +15,9 @@ namespace TestAPI.Services
         DateTime LogTime(string workerID, bool toLogIn);
         bool IsLoggedIn(string workerID);
         List<ShiftLog> LogWorkingHours(string employeeID);
-        double GetHolidayBalance(string employeeID);
+        HolidayBalance GetHolidayBalance(string employeeID);
+        bool ApplyForLeave(string employeeID, string DateFrom, string DateTill);
+        bool ApproveLeave(string leaveID);
+        bool DenieLeave(string leaveID);
     }
 }

@@ -123,6 +123,8 @@ namespace TestAPI.Services
             if (IsLoggedIn(employeeID) && toLogIn)
                 throw new Exception("employee already logged in");
 
+            if (IsOnLeave(employeeID))
+                throw new Exception("Employee is on leave");
             IShiftService _shiftService = new ShiftService();
             List<Shift> shiftList = _shiftService.GetShifts();
             Shift ss = shiftList.FirstOrDefault(shft => shft.Category == EventCategory.WorkingTime);
@@ -156,6 +158,31 @@ namespace TestAPI.Services
             connection.Close();
             return DateTime.Now;
         }
+
+        private bool IsOnLeave(string employeeID)
+        {
+            
+            connection.Open();
+
+            var getTotalRecords = connection.CreateCommand();
+            getTotalRecords.CommandText = "select *  from Log where resource='" + employeeID + "'and type = 2 and comment like '%[1]%' order by dtcreated DESC";
+            getTotalRecords.CommandType = CommandType.Text;
+            SqliteDataReader sqlite_datareader = getTotalRecords.ExecuteReader();
+            List<HolidayLog> logList = sqlite_datareader.Cast<IDataRecord>()
+                    .Select(dr => new HolidayLog((string)dr["Comment"])
+                    {
+                        OID = dr["guid"].ToString(),
+                        Type = (LogType)int.Parse(dr["Type"].ToString()),
+                        //Resource = (Employee)dr["Resource"],
+                        //Comment = (string)dr["Comment"],
+                        DTCreated = new DateTime(long.Parse(dr["DTCreated"].ToString()))
+                    }).ToList();
+
+            connection.Close();
+            
+            return logList.Exists(hlog => DateTime.Now.Date > hlog.DateFrom.Date && DateTime.Now.Date < hlog.DateTill);
+        }
+
         /// <summary>
         /// Method check if Employee is logged in or not
         /// </summary>
@@ -188,7 +215,6 @@ namespace TestAPI.Services
                                                     " where login=@login";
             getTotalRecords.CommandType = CommandType.Text;
 
-            
             getTotalRecords.Parameters.AddWithValue("dtmodified", "" + DateTime.Now.Ticks);
             getTotalRecords.Parameters.AddWithValue("firstname", empl.FirstName);
             getTotalRecords.Parameters.AddWithValue("lastname", empl.LastName);
@@ -220,7 +246,6 @@ namespace TestAPI.Services
                         //Resource = (Employee)dr["Resource"],
                         Comment = (string)dr["Comment"],
                         DTCreated = new DateTime(long.Parse(dr["DTCreated"].ToString()))
-
                     }).ToList();
 
             connection.Close();
@@ -242,7 +267,8 @@ namespace TestAPI.Services
                     // in case worker logs in and out we skip second iteration.
                     sh.TimeTill = logList[a + 1].DTCreated;
                     TimeSpan durationTmsp = sh.TimeTill.TimeOfDay - sh.TimeFrom.TimeOfDay;
-                    sh.Hours = Math.Round(durationTmsp.TotalHours);
+                    sh.Hours = Math.Round(durationTmsp.TotalHours,2);
+                    sh.DisplayHours = string.Format("{0}:{1}", durationTmsp.Hours, durationTmsp.Minutes);
                     a++;
                 }
                 else
@@ -251,6 +277,7 @@ namespace TestAPI.Services
                     Shift ss = shiftList.FirstOrDefault(shft => shft.Category == EventCategory.WorkingTime);
                     TimeSpan durationTmsp = ss.EndTime - sh.TimeFrom.TimeOfDay;
                     sh.Hours = Math.Round(durationTmsp.TotalHours,2);
+                    sh.DisplayHours = string.Format("{0}:{1}", durationTmsp.Hours, durationTmsp.Minutes);
                     sh.TimeTill = sh.TimeFrom.AddMinutes(durationTmsp.TotalMinutes);// Temporary; TODO: add shift dictionary to get default working hours
                 }
                 shiftLogList.Add(sh);
@@ -258,14 +285,89 @@ namespace TestAPI.Services
             return shiftLogList;
         }
 
-        public double GetHolidayBalance(string employeeID)
+        public HolidayBalance GetHolidayBalance(string employeeID)
         {
             double minHolRate = 0.083475;
             List < ShiftLog> shiftList = this.LogWorkingHours(employeeID);
+            List<HolidayLog> gg = GetLeaves(employeeID);
+            HolidayBalance holdBal = new HolidayBalance();
 
-            double holidayPay = shiftList.Sum(s => s.Hours * s.Rate* minHolRate);
-            double holidayHours = shiftList.Sum(s => s.Hours * minHolRate);
-            return holidayHours;
+            holdBal.TimeFrom = shiftList.OrderBy(s => s.TimeFrom).FirstOrDefault().TimeFrom;
+            holdBal.TimeTill = shiftList.OrderBy(s => s.TimeFrom).LastOrDefault().TimeTill;// new DateTime();
+            holdBal.HoursTotal= shiftList.Where(s=>!gg.Exists(hlog=> s.TimeFrom.Date>hlog.DateFrom.Date && s.TimeFrom.Date<hlog.DateTill)).Sum(s => s.Hours * minHolRate);
+            holdBal.HoursUsed = gg.Where(hlog=>hlog.Approved).Sum(s => s.Hours);
+            holdBal.HolidayPayTotal= shiftList.Sum(s => s.Hours * s.Rate * minHolRate);
+            
+            return holdBal;
+        }
+
+        public bool ApplyForLeave(string employeeID, string DateFrom, string DateTill)
+        {
+            connection.Open();
+            //var getRecords = connection.CreateCommand();
+            var getTotalRecords = connection.CreateCommand();
+            getTotalRecords.CommandText = "select rate  from Employee where guid='" + employeeID + "'";
+            getTotalRecords.CommandType = CommandType.Text;
+            
+            if (Convert.ToDouble(getTotalRecords.ExecuteScalar()) > 0)
+            {
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var insertCmd = connection.CreateCommand();
+
+                    insertCmd.CommandText = "INSERT INTO Log VALUES('" + Guid.NewGuid().ToString() + "'," +
+                                                                        DateTime.Now.Ticks + ",'" +
+                                                                        LogType.PaidLeave + "','" +
+                                                                        employeeID + "','[" +
+                                                                        DateFrom + ":"+ DateTill + "][0]')";
+                    insertCmd.ExecuteNonQuery();
+
+                    //insertCmd.CommandText = "Update Employee set LastLoggedIn='" + DateTime.Now.Ticks + "' where guid='" + employeeID + "'";
+                    //insertCmd.ExecuteNonQuery();
+
+                    transaction.Commit();
+                }
+            }
+            connection.Close();
+            return false;
+        }
+
+        public bool ApproveLeave(string leaveID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DenieLeave(string leaveID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<HolidayLog> GetLeaves(string employeeID)
+        {
+            connection.Open();
+            //var getRecords = connection.CreateCommand();
+            var getTotalRecords = connection.CreateCommand();
+            getTotalRecords.CommandText = "select *  from Log where resource='" + employeeID + "' and type in ("+
+                                                (int)LogType.PaidLeave+","+
+                                                (int)LogType.UnpaidLeave + "," +
+                                                (int)LogType.SickLeave+") and comment like '%[1]%'";
+            getTotalRecords.CommandType = CommandType.Text;
+
+            SqliteDataReader sqlite_datareader = getTotalRecords.ExecuteReader();
+
+            List<HolidayLog> logList = sqlite_datareader.Cast<IDataRecord>()
+                    .Select(dr => new HolidayLog((string)dr["Comment"])
+                    {
+                        OID = dr["guid"].ToString(),
+                        Type = (LogType)int.Parse(dr["Type"].ToString()),
+                        //Resource = (Employee)dr["Resource"],
+                        //Comment = (string)dr["Comment"],
+                        DTCreated = new DateTime(long.Parse(dr["DTCreated"].ToString()))
+                    }).ToList();
+
+            connection.Close();
+
+            return logList;
         }
     }
 }
